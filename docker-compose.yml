@@ -1,0 +1,72 @@
+version: '3'
+
+services:
+  portfolio-back-end:
+    build: ./portfolio
+    container_name: portfolio-back-end
+    user: "${UID}:${GID}"
+    volumes:
+      - ./portfolio:/usr/src/app
+    ports:
+      - "3001:3001"
+    depends_on:
+      - portfolio-database
+    networks:
+      - portfolio_net
+    environment:
+      APP_ENV: ${APP_ENV}
+
+  portfolio-database:
+    image: postgres:15-bullseye
+    container_name: portfolio-database
+    restart: always
+    tty: true
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'changeme'
+      POSTGRES_DB: 'postgres'
+    ports:
+      - "5432:5432"
+    networks:
+      - portfolio_net
+
+  portfolio-pgadmin:
+    image: dpage/pgadmin4
+    container_name: portfolio-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: 'pgadmin4@pgadmin.org'
+      PGADMIN_DEFAULT_PASSWORD: 'admin'
+    ports:
+      - "5050:80"
+    depends_on:
+      - portfolio-database
+    networks:
+      - portfolio_net
+
+  portfolio-caddy:
+    image: caddy:2
+    container_name: portfolio-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - /var/www/certbot:/var/www/certbot
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - portfolio-back-end
+    networks:
+      - portfolio_net
+
+networks:
+  portfolio_net:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

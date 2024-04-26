@@ -1,0 +1,5 @@
+# chmod -R u+w data/
+data/*
+portfolio/node_modules/
+.env
+portfolio/.env

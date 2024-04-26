@@ -1,0 +1,4 @@
+# Development Caddyfile
+:80 {
+    reverse_proxy /api/* portfolio-back-end:3001
+}
